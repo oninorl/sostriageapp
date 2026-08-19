@@ -1,0 +1,1 @@
+export default function Footer() { return ( <footer className="w-full border-t border-gray-200 px-6 py-4 text-sm text-gray-500 text-center"> © 2026 SOS Triage — AI-101 Builder Studio Project </footer> ); }

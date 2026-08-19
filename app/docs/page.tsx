@@ -1,0 +1,1 @@
+export default function DocsPage() { return ( <main className="px-6 py-12"> <h1 className="text-2xl font-bold">Docs</h1> <p className="text-gray-500 mt-2">Documentation coming soon.</p> </main> ); }

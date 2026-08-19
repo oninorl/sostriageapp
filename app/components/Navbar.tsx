@@ -1,0 +1,1 @@
+export default function Navbar() { return ( <nav className="w-full border-b border-gray-200 px-6 py-4 flex items-center justify-between"> <span className="font-bold text-lg">SOS Triage</span> <div className="flex gap-6 text-sm"> <a href="/" className="hover:underline">Home</a> <a href="/docs" className="hover:underline">Docs</a> </div> </nav> ); }
