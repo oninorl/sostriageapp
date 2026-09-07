@@ -1,8 +1,1 @@
-export default function DocsPage() {
-  return (
-    <main className="px-6 py-12">
-      <h1 className="text-2xl font-bold">Docs</h1>
-      <p className="text-gray-500 mt-2">Documentation coming soon.</p>
-    </main>
-  );
-}
+export default function DocsPage() { return ( <main className="px-6 py-12 max-w-2xl mx-auto"> <h1 className="text-2xl font-bold mb-6">Docs</h1> <section className="mb-10"> <h2 className="text-lg font-semibold mb-2">About this project</h2> <p className="text-gray-600"> SOS Triage is a student-built prototype that simulates an AI-powered first medical intake for travelers abroad. It is a demo, not a real medical product. </p> </section> <section> <h2 className="text-lg font-semibold mb-2">Prompt Library</h2> <p className="text-gray-600 mb-4"> This section documents the exact coding agent prompt used to build the /core page, as required by the course. </p> <div className="bg-gray-900 text-gray-100 rounded-md p-5 text-sm font-mono leading-relaxed overflow-x-auto"> <p className="text-gray-400 mb-3 font-sans font-semibold">Prompt used to build /core:</p> <p className="whitespace-pre-wrap"> {`Create a /core page in my existing Next.js project. Add an intake form with: - a free-text field for symptom description - 2 multiple-choice questions (symptom duration, pain level 1-10) On submit, run a local, rule-based function (no external AI API) that generates: - a structured summary of the input - an urgency level (green/yellow/orange/red) based on keyword matching Display this in an output card clearly labeled 'Simulated demo output — not real medical advice'. Add a Save button that writes the result to a Supabase table called core_outputs. Below the output card, add a dashboard preview showing the last 5 saved entries from that table.`} </p> </div> </section> </main> ); }
