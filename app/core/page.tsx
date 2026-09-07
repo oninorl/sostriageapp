@@ -74,7 +74,10 @@ export default function CorePage() {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1 px-6 py-12 max-w-2xl mx-auto w-full">
-        <h1 className="text-2xl font-bold mb-6">Symptom Intake</h1>
+        <h1 className="text-2xl font-bold mb-2">Symptom Intake</h1>
+        <p className="text-sm text-gray-500 mb-6">
+          This tool provides a simulated triage assessment for demonstration purposes only. It does not replace professional medical advice.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
