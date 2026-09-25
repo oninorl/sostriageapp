@@ -183,8 +183,11 @@ export default function ResearchPage() {
             placeholder="Search by name or type..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full border border-gray-700 rounded-md p-2 mb-3 text-sm bg-gray-800 text-gray-100 placeholder-gray-500"
+            className="w-full border border-gray-700 rounded-md p-2 mb-2 text-sm bg-gray-800 text-gray-100 placeholder-gray-500"
           />
+          <p className="text-xs text-gray-500 mb-3">
+            Showing {filteredCompetitors.length} of {competitors.length} competitors
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
