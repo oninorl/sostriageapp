@@ -217,6 +217,7 @@ export default function ResearchPage() {
           </p>
           <div className="bg-gray-900 border border-gray-700 rounded-md p-4">
             <svg viewBox="0 0 720 420" className="w-full h-auto">
+              <title>Risk map showing five business risks plotted by likelihood and impact</title>
               <line x1="60" y1="20" x2="60" y2="360" stroke="#4b5563" strokeWidth="1" />
               <line x1="60" y1="360" x2="560" y2="360" stroke="#4b5563" strokeWidth="1" />
               <line x1="310" y1="20" x2="310" y2="360" stroke="#374151" strokeDasharray="4 4" />
