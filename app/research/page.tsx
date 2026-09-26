@@ -213,7 +213,7 @@ export default function ResearchPage() {
         </section>
 
         {/* Risk map */}
-        <section>
+        <section className="mb-8">
           <h2 className="text-lg font-semibold mb-2 text-white">Risk Map</h2>
           <p className="text-sm text-gray-400 mb-4">
             Five key risks, plotted by likelihood (horizontal axis) and impact (vertical axis). Higher and further right is more urgent to address.
@@ -250,6 +250,10 @@ export default function ResearchPage() {
             </svg>
           </div>
         </section>
+
+        <p className="text-xs text-gray-600">
+          Research last updated: September 25, 2026
+        </p>
       </main>
       <Footer />
     </div>
