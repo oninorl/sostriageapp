@@ -112,7 +112,11 @@ export default function ResearchPage() {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1 px-6 py-12 max-w-3xl mx-auto w-full text-gray-100">
-        <h1 className="text-2xl font-bold mb-6 text-white">Research & Benchmarking</h1>
+        <h1 className="text-2xl font-bold mb-2 text-white">Research & Benchmarking</h1>
+        <p className="text-sm text-gray-400 mb-8">
+          This page documents the market research behind SOS Triage: real-world
+          examples, local context, competitor positioning, and known risks.
+        </p>
 
         {/* Research intake */}
         <section className="mb-12">
