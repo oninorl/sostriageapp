@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { supabase } from "../lib/supabaseClient";
 
 type Tier = {
   id: string;
@@ -91,6 +92,16 @@ const assumptions: Assumption[] = [
   },
 ];
 
+type SavedScenario = {
+  id: number;
+  tier: string;
+  members: number;
+  monthly_intakes: number;
+  period: string;
+  calculated_revenue: number;
+  created_at: string;
+};
+
 type Period = "monthly" | "annual";
 
 function formatUSD(value: number) {
@@ -113,6 +124,10 @@ export default function PricingPage() {
   const [members, setMembers] = useState(50000);
   const [ratePercent, setRatePercent] = useState(2);
   const [period, setPeriod] = useState<Period>("monthly");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [scenarios, setScenarios] = useState<SavedScenario[]>([]);
 
   const tier = tiers.find((t) => t.id === tierId) ?? tiers[1];
   const multiplier = period === "annual" ? 12 : 1;
@@ -124,6 +139,45 @@ export default function PricingPage() {
   const periodIntakeRevenue = periodIntakes * tier.intakeFee;
   const periodRevenue = periodLicense + periodIntakeRevenue;
   const recommended = recommendedTierId(members);
+
+  async function loadScenarios() {
+    const { data } = await supabase
+      .from("pricing_scenarios")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5);
+    if (data) setScenarios(data as SavedScenario[]);
+  }
+
+  useEffect(() => {
+    loadScenarios();
+  }, []);
+
+  useEffect(() => {
+    setSaved(false);
+    setSaveError("");
+  }, [tierId, members, ratePercent, period]);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError("");
+    const { error } = await supabase.from("pricing_scenarios").insert({
+      tier: tier.name,
+      members,
+      monthly_intakes: monthlyIntakes,
+      period,
+      calculated_revenue: periodRevenue,
+    });
+    setSaving(false);
+    if (error) {
+      setSaveError(
+        "Could not save this scenario. Check that pricing_scenarios is exposed in the Supabase Data API and has an INSERT policy."
+      );
+      return;
+    }
+    setSaved(true);
+    loadScenarios();
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -269,7 +323,45 @@ export default function PricingPage() {
                 </span>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md text-sm disabled:opacity-50"
+            >
+              {saving ? "Saving..." : saved ? "Saved ✓" : "Save scenario"}
+            </button>
+            {saveError && <p className="mt-2 text-xs text-red-400">{saveError}</p>}
           </div>
+        </section>
+
+        {/* Saved scenarios */}
+        <section className="mb-12">
+          <h2 className="text-lg font-semibold mb-2 text-white">Saved Scenarios</h2>
+          {scenarios.length === 0 ? (
+            <p className="text-sm text-gray-500">No scenarios saved yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {scenarios.map((s) => (
+                <li
+                  key={s.id}
+                  className="text-sm text-gray-100 bg-gray-800 border border-gray-700 rounded-md p-3 flex flex-wrap justify-between gap-2"
+                >
+                  <span>
+                    <span className="font-semibold text-white">{s.tier}</span>
+                    {" · "}
+                    {Number(s.members).toLocaleString("en-US")} members
+                    {" · "}
+                    {s.period === "annual" ? "Annual" : "Monthly"}
+                  </span>
+                  <span className="font-semibold text-white">
+                    {formatUSD(Number(s.calculated_revenue))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {/* Assumptions table */}
