@@ -7,6 +7,7 @@ export default function Navbar() {
         <a href="/core" className="hover:underline">Triage</a>
         <a href="/research" className="hover:underline">Research</a>
         <a href="/product" className="hover:underline">Product</a>
+        <a href="/pricing" className="hover:underline">Pricing</a>
         <a href="/docs" className="hover:underline">Docs</a>
       </div>
     </nav>
