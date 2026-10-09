@@ -6,6 +6,7 @@ export default function Navbar() {
         <a href="/" className="hover:underline">Home</a>
         <a href="/core" className="hover:underline">Triage</a>
         <a href="/research" className="hover:underline">Research</a>
+        <a href="/product" className="hover:underline">Product</a>
         <a href="/docs" className="hover:underline">Docs</a>
       </div>
     </nav>
