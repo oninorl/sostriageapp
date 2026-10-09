@@ -47,6 +47,8 @@ const tiers: Tier[] = [
   },
 ];
 
+type Period = "monthly" | "annual";
+
 function formatUSD(value: number) {
   return value.toLocaleString("en-US", {
     style: "currency",
@@ -66,11 +68,17 @@ export default function PricingPage() {
   const [tierId, setTierId] = useState("growth");
   const [members, setMembers] = useState(50000);
   const [ratePercent, setRatePercent] = useState(2);
+  const [period, setPeriod] = useState<Period>("monthly");
 
   const tier = tiers.find((t) => t.id === tierId) ?? tiers[1];
+  const multiplier = period === "annual" ? 12 : 1;
+  const periodLabel = period === "annual" ? "year" : "month";
+
   const monthlyIntakes = Math.round((members * ratePercent) / 100);
-  const intakeRevenue = monthlyIntakes * tier.intakeFee;
-  const monthlyRevenue = tier.baseFee + intakeRevenue;
+  const periodIntakes = monthlyIntakes * multiplier;
+  const periodLicense = tier.baseFee * multiplier;
+  const periodIntakeRevenue = periodIntakes * tier.intakeFee;
+  const periodRevenue = periodLicense + periodIntakeRevenue;
   const recommended = recommendedTierId(members);
 
   return (
@@ -117,7 +125,29 @@ export default function PricingPage() {
 
         {/* Calculator */}
         <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-2 text-white">Revenue Calculator</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold text-white">Revenue Calculator</h2>
+            <div className="flex border border-gray-700 rounded-md overflow-hidden text-sm">
+              <button
+                type="button"
+                onClick={() => setPeriod("monthly")}
+                className={`px-3 py-1 ${
+                  period === "monthly" ? "bg-blue-600 text-white" : "text-gray-300"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriod("annual")}
+                className={`px-3 py-1 ${
+                  period === "annual" ? "bg-blue-600 text-white" : "text-gray-300"
+                }`}
+              >
+                Annual
+              </button>
+            </div>
+          </div>
           <p className="text-sm text-gray-400 mb-4">
             Choose a tier above, then enter the insurer&apos;s size and how many members
             are expected to use the service each month.
@@ -164,28 +194,34 @@ export default function PricingPage() {
           <div className="border border-gray-700 rounded-md p-4 bg-gray-900">
             <p className="text-sm text-gray-400 mb-3">
               Selected tier: <span className="text-white font-medium">{tier.name}</span>
+              {" · "}
+              <span className="text-white font-medium">
+                {period === "annual" ? "Annual" : "Monthly"} view
+              </span>
             </p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-400">Monthly license</span>
-                <span className="text-gray-100">{formatUSD(tier.baseFee)}</span>
+                <span className="text-gray-400">License (per {periodLabel})</span>
+                <span className="text-gray-100">{formatUSD(periodLicense)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Intakes per month</span>
+                <span className="text-gray-400">Intakes (per {periodLabel})</span>
                 <span className="text-gray-100">
-                  {monthlyIntakes.toLocaleString("en-US")}
+                  {periodIntakes.toLocaleString("en-US")}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">
                   Intake fees ({formatUSD(tier.intakeFee)} each)
                 </span>
-                <span className="text-gray-100">{formatUSD(intakeRevenue)}</span>
+                <span className="text-gray-100">{formatUSD(periodIntakeRevenue)}</span>
               </div>
               <div className="flex justify-between border-t border-gray-700 pt-2 mt-2">
-                <span className="font-semibold text-white">Monthly revenue</span>
                 <span className="font-semibold text-white">
-                  {formatUSD(monthlyRevenue)}
+                  {period === "annual" ? "Annual revenue" : "Monthly revenue"}
+                </span>
+                <span className="font-semibold text-white">
+                  {formatUSD(periodRevenue)}
                 </span>
               </div>
             </div>
