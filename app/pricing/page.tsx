@@ -47,6 +47,50 @@ const tiers: Tier[] = [
   },
 ];
 
+type Assumption = {
+  name: string;
+  value: string;
+  risk: string;
+};
+
+const assumptions: Assumption[] = [
+  {
+    name: "Intake rate",
+    value: "2% of insured members use the service per month (default, editable)",
+    risk: "Placeholder, not measured data. The real rate must be validated with insurers.",
+  },
+  {
+    name: "Prices",
+    value: "License and per-intake fees are the tier values shown above",
+    risk: "Illustrative figures, not based on signed contracts or a willingness-to-pay study.",
+  },
+  {
+    name: "Annual view",
+    value: "Annual revenue = monthly revenue × 12",
+    risk: "Ignores seasonality. Travel-related intakes probably peak in holiday periods.",
+  },
+  {
+    name: "Tier fit by size",
+    value: "Starter up to 10,000 members, Growth up to 100,000, Enterprise above",
+    risk: "Thresholds are indicative. A real insurer may negotiate a different tier.",
+  },
+  {
+    name: "Adoption",
+    value: "Every insured member of the insurer has access to the service",
+    risk: "In practice an insurer may start with a pilot group, which lowers volume.",
+  },
+  {
+    name: "Currency",
+    value: "USD, before taxes, discounts, and payment fees",
+    risk: "Real contracts would add VAT, discounts, and payment processing costs.",
+  },
+  {
+    name: "Costs",
+    value: "The calculator shows revenue only, not profit",
+    risk: "Hosting, AI usage, support staff, and sales costs are not included.",
+  },
+];
+
 type Period = "monthly" | "annual";
 
 function formatUSD(value: number) {
@@ -124,7 +168,7 @@ export default function PricingPage() {
         </section>
 
         {/* Calculator */}
-        <section className="mb-8">
+        <section className="mb-12">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-semibold text-white">Revenue Calculator</h2>
             <div className="flex border border-gray-700 rounded-md overflow-hidden text-sm">
@@ -225,6 +269,34 @@ export default function PricingPage() {
                 </span>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Assumptions table */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-2 text-white">Assumptions</h2>
+          <p className="text-sm text-gray-400 mb-4">
+            What the calculator takes for granted, written down so it can be questioned.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="text-left border-b border-gray-700">
+                  <th className="py-2 pr-4 text-white">Assumption</th>
+                  <th className="py-2 pr-4 text-white">Value used</th>
+                  <th className="py-2 text-white">Why it may be wrong</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assumptions.map((a) => (
+                  <tr key={a.name} className="border-b border-gray-800 align-top">
+                    <td className="py-2 pr-4 font-medium text-gray-100">{a.name}</td>
+                    <td className="py-2 pr-4 text-gray-300">{a.value}</td>
+                    <td className="py-2 text-gray-500">{a.risk}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       </main>
