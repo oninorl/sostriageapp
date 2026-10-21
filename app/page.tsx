@@ -19,6 +19,43 @@ const buttonTexts: Record<Variant, string> = {
   B: "See how an intake works",
 };
 
+const steps = [
+  {
+    title: "1. The traveler describes the problem",
+    text: "Symptoms, how long they have lasted, and a pain level, entered in a short form instead of repeated over the phone.",
+  },
+  {
+    title: "2. The system structures the intake",
+    text: "The answers become a structured summary and a suggested urgency level (green, orange, or red). In this demo the logic is simulated with simple keyword rules.",
+  },
+  {
+    title: "3. A doctor decides",
+    text: "The doctor receives the summary before the first call and stays responsible for the medical decision. The tool never diagnoses.",
+  },
+];
+
+const insurerPoints = [
+  {
+    title: "Less repetitive intake",
+    text: "The same questions are collected once, in a form, so staff do not start every call from zero.",
+  },
+  {
+    title: "A summary ready for the doctor",
+    text: "Symptoms, duration, pain level, and a suggested urgency level arrive together.",
+  },
+  {
+    title: "Transparent pricing",
+    text: "A monthly license plus a fee per intake, with three tiers and a calculator you can try.",
+  },
+];
+
+const explore = [
+  { href: "/core", title: "Triage demo", text: "Try the simulated intake and save a result." },
+  { href: "/research", title: "Research", text: "Competitors, global examples, Mexico context, and a risk map." },
+  { href: "/product", title: "Product", text: "Customer segments and which features come with which tier." },
+  { href: "/pricing", title: "Pricing", text: "Three tiers and a revenue calculator for insurers." },
+];
+
 export default function Home() {
   const [headlineVariant, setHeadlineVariant] = useState<Variant | null>(null);
   const [buttonVariant, setButtonVariant] = useState<Variant | null>(null);
@@ -77,14 +114,47 @@ export default function Home() {
           </p>
         </section>
 
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold mb-4 text-white">Project Roadmap</h2>
-          <ul className="space-y-2 text-gray-300">
-            <li>Week 0 — Setup: infrastructure, homepage, deploy ✅</li>
-            <li>Week 1 — Generative Core: AI intake & triage output</li>
-            <li>Week 2+ — Expansion: dashboard, insurer integration</li>
-            <li>Module 6 — Validation & impact</li>
-          </ul>
+        <section className="mt-16">
+          <h2 className="text-xl font-semibold mb-4 text-white">How it works</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {steps.map((s) => (
+              <div key={s.title} className="border border-gray-700 rounded-md p-4">
+                <p className="font-semibold text-white mb-2">{s.title}</p>
+                <p className="text-sm text-gray-400">{s.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-16">
+          <h2 className="text-xl font-semibold mb-1 text-white">For insurers</h2>
+          <p className="text-xs text-gray-500 mb-4">
+            Design goals of the product. None of these are measured results yet.
+          </p>
+          <div className="grid gap-4 md:grid-cols-3">
+            {insurerPoints.map((p) => (
+              <div key={p.title} className="border border-gray-700 rounded-md p-4">
+                <p className="font-semibold text-white mb-2">{p.title}</p>
+                <p className="text-sm text-gray-400">{p.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-16 mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-white">Explore what is built</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {explore.map((e) => (
+              <Link
+                key={e.href}
+                href={e.href}
+                className="border border-gray-700 rounded-md p-4 hover:border-blue-500"
+              >
+                <p className="font-semibold text-white mb-1">{e.title}</p>
+                <p className="text-sm text-gray-400">{e.text}</p>
+              </Link>
+            ))}
+          </div>
         </section>
       </main>
       <Footer />
