@@ -2,6 +2,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AssetCard from "./AssetCard";
 import { brand, persona, landingCopy } from "./brand";
+import { contentSections } from "./contentSections";
 
 function BulletList({ items }: { items: string[] }) {
   return (
@@ -103,7 +104,7 @@ export default function MarketingPage() {
         </section>
 
         {/* Landing page copy */}
-        <section className="mb-8">
+        <section className="mb-16">
           <h2 className="text-lg font-semibold mb-2 text-white">Landing Page Copy</h2>
           <p className="text-sm text-gray-400 mb-4">
             The master text for the homepage. The two headlines and the two button texts are
@@ -115,6 +116,11 @@ export default function MarketingPage() {
             ))}
           </div>
         </section>
+
+        {/* Content sections: social posts, video scripts, calendar, and more */}
+        {contentSections.map(({ id, Component }) => (
+          <Component key={id} />
+        ))}
       </main>
       <Footer />
     </div>
