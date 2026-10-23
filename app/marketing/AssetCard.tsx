@@ -1,10 +1,15 @@
 "use client";
 import { useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 type Props = {
   title: string;
   text: string;
+  // Defaults to landing copy, the only card type that does not pass its own type.
+  assetType?: string;
 };
+
+type SaveState = "idle" | "saving" | "saved" | "exists" | "error";
 
 function fileNameFor(title: string) {
   const name = title
@@ -15,9 +20,10 @@ function fileNameFor(title: string) {
   return name || "asset";
 }
 
-export default function AssetCard({ title, text }: Props) {
+export default function AssetCard({ title, text, assetType = "landing_copy" }: Props) {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
 
   async function handleCopy() {
     try {
@@ -44,6 +50,44 @@ export default function AssetCard({ title, text }: Props) {
     URL.revokeObjectURL(url);
   }
 
+  async function handleSave() {
+    setSaveState("saving");
+
+    // Do not save the same asset twice.
+    const { count, error: checkError } = await supabase
+      .from("marketing_assets")
+      .select("id", { count: "exact", head: true })
+      .eq("asset_type", assetType)
+      .eq("title", title);
+    if (checkError) {
+      setSaveState("error");
+      return;
+    }
+    if ((count ?? 0) > 0) {
+      setSaveState("exists");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("marketing_assets")
+      .insert({ asset_type: assetType, title, content: text });
+    if (error) {
+      setSaveState("error");
+      return;
+    }
+    setSaveState("saved");
+    window.dispatchEvent(new Event("assets-updated"));
+  }
+
+  const saveLabel =
+    saveState === "saving"
+      ? "Saving..."
+      : saveState === "saved"
+      ? "Saved ✓"
+      : saveState === "exists"
+      ? "Already saved ✓"
+      : "Save asset";
+
   return (
     <div className="border border-gray-700 rounded-md p-4">
       <p className="font-semibold text-white mb-2">{title}</p>
@@ -63,9 +107,23 @@ export default function AssetCard({ title, text }: Props) {
         >
           Export .txt
         </button>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saveState === "saving" || saveState === "saved" || saveState === "exists"}
+          className="bg-blue-600 text-white px-3 py-1 rounded-md text-xs disabled:opacity-60"
+        >
+          {saveLabel}
+        </button>
         {copyError && (
           <span className="text-xs text-red-400">
             Copy failed. Select the text and copy it manually.
+          </span>
+        )}
+        {saveState === "error" && (
+          <span className="text-xs text-red-400">
+            Could not save. Check that marketing_assets is exposed in the Supabase Data
+            API and has an INSERT policy.
           </span>
         )}
       </div>

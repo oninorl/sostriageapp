@@ -13,6 +13,7 @@ export default function SocialPosts() {
         {posts.map((p) => (
           <AssetCard
             key={p.id}
+            assetType="social_post"
             title={`Post ${p.id} · Day ${p.day} · ${p.platform} · ${p.theme}`}
             text={p.text}
           />
@@ -20,4 +21,4 @@ export default function SocialPosts() {
       </div>
     </section>
   );
-} 
+}

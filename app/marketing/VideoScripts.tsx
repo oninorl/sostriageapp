@@ -11,7 +11,7 @@ export default function VideoScripts() {
       </p>
       <div className="grid gap-4">
         {scripts.map((s) => (
-          <AssetCard key={s.id} title={s.title} text={s.text} />
+          <AssetCard key={s.id} assetType="video_script" title={s.title} text={s.text} />
         ))}
       </div>
     </section>
