@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
+  checkGuardrail,
   getUrgency,
   messages as texts,
   nextSteps,
@@ -14,16 +15,24 @@ import {
 
 type NewMessage =
   | { from: "assistant" | "user"; kind: "text"; text: string }
-  | { from: "assistant"; kind: "result"; urgency: Urgency; summary: string };
+  | { from: "assistant"; kind: "result"; urgency: Urgency; summary: string }
+  | { from: "assistant"; kind: "emergency" };
 
 type Message = NewMessage & { id: number };
 
 type Step = "problem" | "duration" | "severity" | "done";
 
+const problemQuestion = "What is the main problem you're experiencing?";
+
 const questions = {
   duration: "How long have you had this?",
   severity: "How would you describe the severity right now?",
 };
+
+function currentQuestion(step: Exclude<Step, "done">) {
+  if (step === "problem") return problemQuestion;
+  return questions[step];
+}
 
 const initialMessages: Message[] = [
   {
@@ -36,7 +45,7 @@ const initialMessages: Message[] = [
     id: 2,
     from: "assistant",
     kind: "text",
-    text: "What is the main problem you're experiencing?",
+    text: problemQuestion,
   },
 ];
 
@@ -89,19 +98,40 @@ export default function ChatPage() {
     const text = input.trim();
     if (!text || step === "done") return;
     setInput("");
-    if (step === "problem") {
-      setProblem(text);
-      push([
-        { from: "user", kind: "text", text },
-        { from: "assistant", kind: "text", text: questions.duration },
-      ]);
-      setStep("duration");
-    } else {
-      push([
-        { from: "user", kind: "text", text },
-        { from: "assistant", kind: "text", text: texts.chooseOption },
-      ]);
+
+    const userMessage: NewMessage = { from: "user", kind: "text", text };
+    const guardrail = checkGuardrail(text);
+
+    // Guardrail 1: an emergency phrase stops the conversation at any step.
+    if (guardrail === "emergency") {
+      push([userMessage, { from: "assistant", kind: "emergency" }]);
+      setStep("done");
+      return;
     }
+
+    // Guardrail 2: diagnosis and medication requests are refused, then the question repeats.
+    if (guardrail === "out_of_scope") {
+      push([
+        userMessage,
+        { from: "assistant", kind: "text", text: texts.outOfScope },
+        { from: "assistant", kind: "text", text: currentQuestion(step) },
+      ]);
+      return;
+    }
+
+    if (step === "problem") {
+      // Guardrail 3: empty or very short input is asked again.
+      if (guardrail === "empty") {
+        push([userMessage, { from: "assistant", kind: "text", text: texts.empty }]);
+        return;
+      }
+      setProblem(text);
+      push([userMessage, { from: "assistant", kind: "text", text: questions.duration }]);
+      setStep("duration");
+      return;
+    }
+
+    push([userMessage, { from: "assistant", kind: "text", text: texts.chooseOption }]);
   }
 
   function chooseDuration(option: { value: Duration; label: string }) {
@@ -159,23 +189,38 @@ export default function ChatPage() {
               ref={listRef}
               className="border border-gray-700 rounded-md p-4 space-y-3 h-[460px] overflow-y-auto"
             >
-              {chat.map((m) =>
-                m.kind === "text" ? (
-                  <div
-                    key={m.id}
-                    className={m.from === "user" ? "flex justify-end" : "flex justify-start"}
-                  >
+              {chat.map((m) => {
+                if (m.kind === "text") {
+                  return (
                     <div
-                      className={
-                        m.from === "user"
-                          ? "max-w-[85%] bg-blue-600 text-white rounded-lg px-3 py-2 text-sm"
-                          : "max-w-[85%] bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-3 py-2 text-sm"
-                      }
+                      key={m.id}
+                      className={m.from === "user" ? "flex justify-end" : "flex justify-start"}
                     >
-                      {m.text}
+                      <div
+                        className={
+                          m.from === "user"
+                            ? "max-w-[85%] bg-blue-600 text-white rounded-lg px-3 py-2 text-sm"
+                            : "max-w-[85%] bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-3 py-2 text-sm"
+                        }
+                      >
+                        {m.text}
+                      </div>
                     </div>
-                  </div>
-                ) : (
+                  );
+                }
+
+                if (m.kind === "emergency") {
+                  return (
+                    <div key={m.id} className="flex justify-start">
+                      <div className="max-w-[90%] border border-red-700 bg-red-950/40 rounded-lg p-4 text-sm">
+                        <p className="font-semibold text-red-300 mb-2">⚠ {texts.emergencyTitle}</p>
+                        <p className="text-gray-100">{texts.emergency}</p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
                   <div key={m.id} className="flex justify-start">
                     <div
                       className={`max-w-[90%] border rounded-lg p-4 text-sm ${urgencyStyles[m.urgency].card}`}
@@ -193,8 +238,8 @@ export default function ChatPage() {
                       </p>
                     </div>
                   </div>
-                )
-              )}
+                );
+              })}
 
               {step === "duration" && (
                 <div className="flex flex-wrap gap-2">
