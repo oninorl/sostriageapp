@@ -3,17 +3,24 @@ export type Severity = "mild" | "moderate" | "severe";
 export type Urgency = "green" | "orange" | "red";
 export type GuardrailType = "none" | "empty" | "out_of_scope" | "emergency";
 
-// Simple keyword rules. They do not understand negation ("no chest pain" still
-// triggers the emergency response), which is the safe direction to fail in.
+// Simple keyword rules, written without apostrophes (see normalize below).
+// They do not understand negation ("no chest pain" still triggers the emergency
+// response), which is the safe direction to fail in.
 const emergencyPhrases = [
   "chest pain",
   "pain in my chest",
   "pressure in my chest",
   "heart attack",
-  "can't breathe",
+  "cant breathe",
+  "cant breath",
   "cannot breathe",
+  "cannot breath",
   "can not breathe",
+  "can not breath",
   "hard to breathe",
+  "hard to breath",
+  "struggling to breathe",
+  "struggling to breath",
   "difficulty breathing",
   "trouble breathing",
   "short of breath",
@@ -32,7 +39,7 @@ const emergencyPhrases = [
   "face is drooping",
   "severe bleeding",
   "bleeding heavily",
-  "won't stop bleeding",
+  "wont stop bleeding",
   "coughing blood",
   "coughing up blood",
   "vomiting blood",
@@ -42,6 +49,8 @@ const emergencyPhrases = [
   "kill myself",
   "end my life",
   "want to die",
+  "dont want to live",
+  "better off dead",
   "hurt myself",
 ];
 
@@ -75,8 +84,13 @@ const outOfScopePhrases = [
 // Words that raise a mild case from green to orange.
 const raiseWords = ["fever", "blood", "vomit", "dehydrat", "faint", "dizz", "confus"];
 
+// Apostrophes are removed, so "can't", "can’t", and "cant" all become "cant".
 function normalize(text: string) {
-  return text.toLowerCase().replace(/[’‘]/g, "'").trim();
+  return text
+    .toLowerCase()
+    .replace(/['’‘`´]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function containsAny(text: string, phrases: string[]) {
