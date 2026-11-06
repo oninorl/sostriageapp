@@ -6,16 +6,19 @@ import {
   checkGuardrail,
   getUrgency,
   messages as texts,
+  needsHumanReview,
   nextSteps,
   urgencyLabels,
   type Duration,
+  type GuardrailType,
   type Severity,
   type Urgency,
 } from "./logic";
 
 type NewMessage =
   | { from: "assistant" | "user"; kind: "text"; text: string }
-  | { from: "assistant"; kind: "result"; urgency: Urgency; summary: string }
+  | { from: "assistant"; kind: "notice" }
+  | { from: "assistant"; kind: "result"; urgency: Urgency; summary: string; flagged: boolean }
   | { from: "assistant"; kind: "emergency" };
 
 type Message = NewMessage & { id: number };
@@ -74,12 +77,17 @@ const wontDo = [
   "It does not handle emergencies. If you are in a life-threatening situation, contact local emergency services immediately.",
 ];
 
+const noticeClass =
+  "text-xs text-orange-200 bg-orange-950/40 border border-orange-700 rounded px-2 py-1";
+
 export default function ChatPage() {
   const [chat, setChat] = useState<Message[]>(initialMessages);
   const [step, setStep] = useState<Step>("problem");
   const [problem, setProblem] = useState("");
   const [duration, setDuration] = useState<{ value: Duration; label: string } | null>(null);
   const [input, setInput] = useState("");
+  // The most serious guardrail triggered so far: "none", "out_of_scope", or "emergency".
+  const [guardrailSeen, setGuardrailSeen] = useState<GuardrailType>("none");
   const nextId = useRef(3);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -104,16 +112,22 @@ export default function ChatPage() {
 
     // Guardrail 1: an emergency phrase stops the conversation at any step.
     if (guardrail === "emergency") {
+      setGuardrailSeen("emergency");
       push([userMessage, { from: "assistant", kind: "emergency" }]);
       setStep("done");
       return;
     }
 
     // Guardrail 2: diagnosis and medication requests are refused, then the question repeats.
+    // The first trigger also flags the conversation for human review.
     if (guardrail === "out_of_scope") {
+      const firstFlag = guardrailSeen === "none";
+      if (firstFlag) setGuardrailSeen("out_of_scope");
+      const notice: NewMessage = { from: "assistant", kind: "notice" };
       push([
         userMessage,
         { from: "assistant", kind: "text", text: texts.outOfScope },
+        ...(firstFlag ? [notice] : []),
         { from: "assistant", kind: "text", text: currentQuestion(step) },
       ]);
       return;
@@ -146,10 +160,11 @@ export default function ChatPage() {
   function chooseSeverity(option: { value: Severity; label: string }) {
     if (!duration) return;
     const urgency = getUrgency(problem, duration.value, option.value);
+    const flagged = needsHumanReview(urgency, guardrailSeen);
     const summary = `Main problem: "${problem}". Duration: ${duration.label.toLowerCase()}. Severity: ${option.label.toLowerCase()}.`;
     push([
       { from: "user", kind: "text", text: option.label },
-      { from: "assistant", kind: "result", urgency, summary },
+      { from: "assistant", kind: "result", urgency, summary, flagged },
     ]);
     setStep("done");
   }
@@ -160,6 +175,7 @@ export default function ChatPage() {
     setProblem("");
     setDuration(null);
     setInput("");
+    setGuardrailSeen("none");
     nextId.current = 3;
   }
 
@@ -209,12 +225,21 @@ export default function ChatPage() {
                   );
                 }
 
+                if (m.kind === "notice") {
+                  return (
+                    <div key={m.id} className="flex justify-start">
+                      <p className={`max-w-[90%] ${noticeClass}`}>⚑ {texts.humanReview}</p>
+                    </div>
+                  );
+                }
+
                 if (m.kind === "emergency") {
                   return (
                     <div key={m.id} className="flex justify-start">
                       <div className="max-w-[90%] border border-red-700 bg-red-950/40 rounded-lg p-4 text-sm">
                         <p className="font-semibold text-red-300 mb-2">⚠ {texts.emergencyTitle}</p>
-                        <p className="text-gray-100">{texts.emergency}</p>
+                        <p className="text-gray-100 mb-3">{texts.emergency}</p>
+                        <p className={noticeClass}>⚑ {texts.humanReview}</p>
                       </div>
                     </div>
                   );
@@ -236,6 +261,9 @@ export default function ChatPage() {
                       <p className="text-xs text-gray-300 bg-gray-900/60 border border-gray-700 rounded px-2 py-1">
                         {texts.simulated}
                       </p>
+                      {m.flagged && (
+                        <p className={`mt-2 ${noticeClass}`}>⚑ {texts.humanReview}</p>
+                      )}
                     </div>
                   </div>
                 );
