@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { supabase } from "../lib/supabaseClient";
 import {
   checkGuardrail,
   getUrgency,
@@ -25,6 +26,15 @@ type Message = NewMessage & { id: number };
 
 type Step = "problem" | "duration" | "severity" | "done";
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+type SessionSummary = {
+  urgency: Urgency | "none";
+  duration: Duration | "none";
+  severity: Severity | "none";
+  guardrail: GuardrailType;
+};
+
 const problemQuestion = "What is the main problem you're experiencing?";
 
 const questions = {
@@ -35,6 +45,14 @@ const questions = {
 function currentQuestion(step: Exclude<Step, "done">) {
   if (step === "problem") return problemQuestion;
   return questions[step];
+}
+
+// Anonymous ID for one conversation. Falls back when crypto.randomUUID is not available.
+function newSessionId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
 const initialMessages: Message[] = [
@@ -88,8 +106,12 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   // The most serious guardrail triggered so far: "none", "out_of_scope", or "emergency".
   const [guardrailSeen, setGuardrailSeen] = useState<GuardrailType>("none");
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const nextId = useRef(3);
   const listRef = useRef<HTMLDivElement>(null);
+  const savedRef = useRef(false);
+  const conversationRef = useRef(0);
 
   useEffect(() => {
     const el = listRef.current;
@@ -99,6 +121,27 @@ export default function ChatPage() {
   function push(items: NewMessage[]) {
     const withIds: Message[] = items.map((i) => ({ ...i, id: nextId.current++ }));
     setChat((prev) => [...prev, ...withIds]);
+  }
+
+  // Saves one structured summary per finished conversation. The typed text is never stored.
+  async function saveSession(summary: SessionSummary) {
+    if (savedRef.current) return;
+    savedRef.current = true;
+    const conversation = conversationRef.current;
+    const id = newSessionId();
+    setSaveStatus("saving");
+    const { error } = await supabase.from("chat_sessions").insert({
+      session_id: id,
+      urgency_level: summary.urgency,
+      duration_answer: summary.duration,
+      severity_answer: summary.severity,
+      guardrail_type: summary.guardrail,
+      flagged_for_review: needsHumanReview(summary.urgency, summary.guardrail),
+    });
+    // Ignore the result if the user already pressed Start over.
+    if (conversation !== conversationRef.current) return;
+    setSessionId(id);
+    setSaveStatus(error ? "error" : "saved");
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -115,6 +158,12 @@ export default function ChatPage() {
       setGuardrailSeen("emergency");
       push([userMessage, { from: "assistant", kind: "emergency" }]);
       setStep("done");
+      void saveSession({
+        urgency: "none",
+        duration: duration?.value ?? "none",
+        severity: "none",
+        guardrail: "emergency",
+      });
       return;
     }
 
@@ -167,15 +216,25 @@ export default function ChatPage() {
       { from: "assistant", kind: "result", urgency, summary, flagged },
     ]);
     setStep("done");
+    void saveSession({
+      urgency,
+      duration: duration.value,
+      severity: option.value,
+      guardrail: guardrailSeen,
+    });
   }
 
   function startOver() {
+    conversationRef.current += 1;
+    savedRef.current = false;
     setChat(initialMessages);
     setStep("problem");
     setProblem("");
     setDuration(null);
     setInput("");
     setGuardrailSeen("none");
+    setSaveStatus("idle");
+    setSessionId(null);
     nextId.current = 3;
   }
 
@@ -326,6 +385,24 @@ export default function ChatPage() {
             >
               Start over
             </button>
+
+            <p className="mt-3 text-xs text-gray-500">
+              When a conversation ends, a short test summary is saved without the text you typed.
+            </p>
+            {saveStatus === "saving" && (
+              <p className="mt-1 text-xs text-gray-400">Saving test summary...</p>
+            )}
+            {saveStatus === "saved" && sessionId && (
+              <p className="mt-1 text-xs text-green-400">
+                Test summary saved ✓ · session {sessionId.slice(0, 8)}
+              </p>
+            )}
+            {saveStatus === "error" && (
+              <p className="mt-1 text-xs text-red-400">
+                Could not save the test summary. Check that chat_sessions is exposed in the
+                Supabase Data API and has an INSERT policy.
+              </p>
+            )}
           </section>
 
           <aside className="border border-gray-700 rounded-md p-4 h-fit">
