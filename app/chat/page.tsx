@@ -27,6 +27,8 @@ type Message = NewMessage & { id: number };
 type Step = "problem" | "duration" | "severity" | "done";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+type FeedbackStatus = "idle" | "sending" | "sent" | "error";
+type Rating = "up" | "down";
 
 type SessionSummary = {
   urgency: Urgency | "none";
@@ -108,6 +110,9 @@ export default function ChatPage() {
   const [guardrailSeen, setGuardrailSeen] = useState<GuardrailType>("none");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [rating, setRating] = useState<Rating | null>(null);
+  const [comment, setComment] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState<FeedbackStatus>("idle");
   const nextId = useRef(3);
   const listRef = useRef<HTMLDivElement>(null);
   const savedRef = useRef(false);
@@ -142,6 +147,21 @@ export default function ChatPage() {
     if (conversation !== conversationRef.current) return;
     setSessionId(id);
     setSaveStatus(error ? "error" : "saved");
+  }
+
+  // Saves the rating and the optional comment once per conversation.
+  async function sendFeedback() {
+    if (!rating || !sessionId) return;
+    if (feedbackStatus === "sending" || feedbackStatus === "sent") return;
+    const conversation = conversationRef.current;
+    setFeedbackStatus("sending");
+    const { error } = await supabase.from("chat_feedback").insert({
+      session_id: sessionId,
+      rating,
+      comment: comment.trim() || null,
+    });
+    if (conversation !== conversationRef.current) return;
+    setFeedbackStatus(error ? "error" : "sent");
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -235,6 +255,9 @@ export default function ChatPage() {
     setGuardrailSeen("none");
     setSaveStatus("idle");
     setSessionId(null);
+    setRating(null);
+    setComment("");
+    setFeedbackStatus("idle");
     nextId.current = 3;
   }
 
@@ -244,6 +267,8 @@ export default function ChatPage() {
       : step === "done"
       ? "Conversation finished. Press Start over for a new one."
       : "Choose an option above, or type here";
+
+  const showFeedback = step === "done" && saveStatus === "saved" && sessionId;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -378,6 +403,71 @@ export default function ChatPage() {
               </button>
             </form>
 
+            {showFeedback && (
+              <div className="mt-3 border border-gray-700 rounded-md p-3">
+                {feedbackStatus === "sent" ? (
+                  <p className="text-sm text-green-400">Thanks for your feedback ✓</p>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-200 mb-2">Was this helpful?</p>
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        aria-label="Thumbs up"
+                        aria-pressed={rating === "up"}
+                        onClick={() => setRating("up")}
+                        className={`border rounded-md px-3 py-1 text-lg ${
+                          rating === "up"
+                            ? "border-green-500 bg-green-950/40"
+                            : "border-gray-600 hover:border-gray-400"
+                        }`}
+                      >
+                        👍
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Thumbs down"
+                        aria-pressed={rating === "down"}
+                        onClick={() => setRating("down")}
+                        className={`border rounded-md px-3 py-1 text-lg ${
+                          rating === "down"
+                            ? "border-red-500 bg-red-950/40"
+                            : "border-gray-600 hover:border-gray-400"
+                        }`}
+                      >
+                        👎
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        aria-label="Optional comment"
+                        maxLength={200}
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="Optional comment (no personal or medical information)"
+                        className="flex-1 border border-gray-700 rounded-md p-2 text-sm bg-gray-800 text-gray-100 placeholder-gray-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={sendFeedback}
+                        disabled={!rating || feedbackStatus === "sending"}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm disabled:opacity-50"
+                      >
+                        {feedbackStatus === "sending" ? "Sending..." : "Send"}
+                      </button>
+                    </div>
+                    {feedbackStatus === "error" && (
+                      <p className="mt-2 text-xs text-red-400">
+                        Could not save the feedback. Check that chat_feedback is exposed in the
+                        Supabase Data API and has an INSERT policy.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
             <button
               type="button"
               onClick={startOver}
@@ -388,6 +478,7 @@ export default function ChatPage() {
 
             <p className="mt-3 text-xs text-gray-500">
               When a conversation ends, a short test summary is saved without the text you typed.
+              If you send feedback, your rating and optional comment are saved too.
             </p>
             {saveStatus === "saving" && (
               <p className="mt-1 text-xs text-gray-400">Saving test summary...</p>
