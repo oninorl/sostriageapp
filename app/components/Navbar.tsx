@@ -5,6 +5,7 @@ export default function Navbar() {
       <div className="flex flex-wrap justify-end gap-x-6 gap-y-1 text-sm">
         <a href="/" className="hover:underline">Home</a>
         <a href="/core" className="hover:underline">Triage</a>
+        <a href="/chat" className="hover:underline">Chat</a>
         <a href="/research" className="hover:underline">Research</a>
         <a href="/product" className="hover:underline">Product</a>
         <a href="/pricing" className="hover:underline">Pricing</a>
