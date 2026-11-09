@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { supabase } from "../lib/supabaseClient";
+import { checkGuardrail, messages as chatTexts, type GuardrailType } from "../chat/logic";
 
 function getTriageResult(symptoms: string, duration: string, pain: number) {
   const text = symptoms.toLowerCase();
@@ -37,6 +38,8 @@ export default function CorePage() {
   const [duration, setDuration] = useState("hours");
   const [pain, setPain] = useState(3);
   const [result, setResult] = useState<TriageResult | null>(null);
+  // Set when the same guardrail rules as /chat stop the form: emergency, out of scope, or too short.
+  const [blocked, setBlocked] = useState<GuardrailType>("none");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [entries, setEntries] = useState<SavedEntry[]>([]);
@@ -56,9 +59,17 @@ export default function CorePage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const triage = getTriageResult(symptoms, duration, pain);
-    setResult(triage);
     setSaved(false);
+
+    const guardrail = checkGuardrail(symptoms);
+    if (guardrail !== "none") {
+      setBlocked(guardrail);
+      setResult(null);
+      return;
+    }
+
+    setBlocked("none");
+    setResult(getTriageResult(symptoms, duration, pain));
   }
 
   async function handleSave() {
@@ -127,6 +138,25 @@ export default function CorePage() {
             Get Triage Assessment
           </button>
         </form>
+
+        {blocked === "emergency" && (
+          <div className={`mt-8 border rounded-md p-4 ${levelColors.red}`}>
+            <p className="font-semibold mb-2">⚠ {chatTexts.emergencyTitle}</p>
+            <p className="text-sm">{chatTexts.emergency}</p>
+          </div>
+        )}
+
+        {blocked === "out_of_scope" && (
+          <div className={`mt-8 border rounded-md p-4 ${levelColors.orange}`}>
+            <p className="text-sm">{chatTexts.outOfScope}</p>
+          </div>
+        )}
+
+        {blocked === "empty" && (
+          <div className="mt-8 border rounded-md p-4 bg-gray-100 text-gray-800 border-gray-300">
+            <p className="text-sm">{chatTexts.empty}</p>
+          </div>
+        )}
 
         {result && (
           <div className={`mt-8 border rounded-md p-4 ${levelColors[result.level]}`}>
