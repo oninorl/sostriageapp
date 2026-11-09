@@ -10,8 +10,11 @@ function getTriageResult(symptoms: string, duration: string, pain: number) {
   const isRed = redFlags.some((flag) => text.includes(flag)) || pain >= 8;
   const isOrange = !isRed && (pain >= 5 || duration === "days");
   const level = isRed ? "red" : isOrange ? "orange" : "green";
+  // Shown to the user only.
   const summary = `Reported symptoms: "${symptoms}". Duration: ${duration}. Pain level: ${pain}/10.`;
-  return { level, summary };
+  // The only text that is saved: structured fields, never the typed symptoms.
+  const storedSummary = `Duration: ${duration}. Pain level: ${pain}/10.`;
+  return { level, summary, storedSummary };
 }
 
 const levelColors: Record<string, string> = {
@@ -27,11 +30,13 @@ type SavedEntry = {
   created_at: string;
 };
 
+type TriageResult = { level: string; summary: string; storedSummary: string };
+
 export default function CorePage() {
   const [symptoms, setSymptoms] = useState("");
   const [duration, setDuration] = useState("hours");
   const [pain, setPain] = useState(3);
-  const [result, setResult] = useState<{ level: string; summary: string } | null>(null);
+  const [result, setResult] = useState<TriageResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [entries, setEntries] = useState<SavedEntry[]>([]);
@@ -60,7 +65,7 @@ export default function CorePage() {
     if (!result) return;
     setSaving(true);
     const { error } = await supabase.from("core_outputs").insert({
-      symptom_text: result.summary,
+      symptom_text: result.storedSummary,
       urgency_level: result.level,
     });
     setSaving(false);
@@ -75,8 +80,11 @@ export default function CorePage() {
       <Navbar />
       <main className="flex-1 px-6 py-12 max-w-2xl mx-auto w-full">
         <h1 className="text-2xl font-bold mb-2">Symptom Intake</h1>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-gray-500 mb-4">
           This tool provides a simulated triage assessment for demonstration purposes only. It does not replace professional medical advice.
+        </p>
+        <p className="border border-yellow-700 bg-yellow-950/30 text-yellow-200 text-sm rounded-md px-3 py-2 mb-6">
+          Do not enter real personal or medical information. The text you type is shown only to you and is never saved. Only the urgency level, the duration, and the pain level are saved.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -136,17 +144,26 @@ export default function CorePage() {
         )}
 
         <div className="mt-12">
-          <h2 className="text-lg font-semibold mb-4">Recent Saved Intakes</h2>
+          <h2 className="text-lg font-semibold mb-1">Recent Saved Intakes</h2>
+          <p className="text-xs text-gray-500 mb-4">
+            Only the urgency level, the duration, and the pain level are shown.
+          </p>
           {entries.length === 0 ? (
             <p className="text-sm text-gray-500">No entries saved yet.</p>
           ) : (
             <ul className="space-y-2">
-              {entries.map((entry) => (
-                <li key={entry.id} className={`border rounded-md p-3 text-sm ${levelColors[entry.urgency_level]}`}>
-                  <span className="font-semibold uppercase mr-2">{entry.urgency_level}</span>
-                  {entry.symptom_text}
-                </li>
-              ))}
+              {entries.map((entry) => {
+                const structured = entry.symptom_text.startsWith("Duration:");
+                return (
+                  <li
+                    key={entry.id}
+                    className={`border rounded-md p-3 text-sm ${levelColors[entry.urgency_level] ?? ""}`}
+                  >
+                    <span className="font-semibold uppercase mr-2">{entry.urgency_level}</span>
+                    {structured ? entry.symptom_text : "Older entry, details hidden for privacy."}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

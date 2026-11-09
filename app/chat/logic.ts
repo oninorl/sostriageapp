@@ -26,6 +26,11 @@ const emergencyPhrases = [
   "short of breath",
   "shortness of breath",
   "stopped breathing",
+  "gasping for air",
+  "gasping for breath",
+  "cant get air",
+  "cant get enough air",
+  "cannot get air",
   "choking",
   "throat is closing",
   "throat closing",
@@ -52,6 +57,14 @@ const emergencyPhrases = [
   "dont want to live",
   "better off dead",
   "hurt myself",
+];
+
+// Breathing problems are described in many ways, so these patterns match a
+// "cannot / unable / not able / difficult" word followed within three words by
+// "breath" ("unable to breathe", "not able to even breathe", "cant catch my breath").
+const emergencyPatterns = [
+  /\b(cant|cannot|can not|couldnt|could not|unable to|not able to|isnt able to|arent able to|wasnt able to|no longer able to|struggl\w* to|trouble|difficult\w*|hard)\b(\s+\w+){0,3}\s+breath/,
+  /\b(not|isnt|arent|wasnt|barely|hardly)\s+(\w+\s+)?breathing\b/,
 ];
 
 const outOfScopePhrases = [
@@ -99,7 +112,9 @@ function containsAny(text: string, phrases: string[]) {
 
 export function checkGuardrail(input: string): GuardrailType {
   const text = normalize(input);
-  if (containsAny(text, emergencyPhrases)) return "emergency";
+  if (containsAny(text, emergencyPhrases) || emergencyPatterns.some((p) => p.test(text))) {
+    return "emergency";
+  }
   if (containsAny(text, outOfScopePhrases)) return "out_of_scope";
   if (text.length < 3) return "empty";
   return "none";
