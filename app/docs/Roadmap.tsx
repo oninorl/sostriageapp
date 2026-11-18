@@ -1,4 +1,4 @@
-import { later, next, now, principle, scenarios, type RoadmapItem } from "./roadmap";
+import { later, next, now, principle, scenarios, type RoadmapItem } from "./roadmapData";
 
 const columns: { key: string; title: string; subtitle: string; items: RoadmapItem[]; accent: string }[] = [
   {
