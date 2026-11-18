@@ -1,6 +1,7 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PromptCard from "./PromptCard";
+import ImpactCheck from "./ImpactCheck";
 import { prompts } from "./promptLibrary";
 import { logs } from "./buildLogs";
 
@@ -40,7 +41,7 @@ export default function DocsPage() {
         </section>
 
         {/* Build logs */}
-        <section className="mb-8">
+        <section className="mb-16">
           <h2 className="text-xl font-bold mb-2 text-white">Build Logs</h2>
           <p className="text-sm text-gray-400 mb-4">
             What was built each week and what was fixed or decided along the way. The full commit
@@ -96,6 +97,9 @@ export default function DocsPage() {
             ))}
           </div>
         </section>
+
+        {/* Practical impact check */}
+        <ImpactCheck />
       </main>
       <Footer />
     </div>
