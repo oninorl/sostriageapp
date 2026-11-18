@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { supabase } from "../lib/supabaseClient";
+import TestingSummary from "./TestingSummary";
 
 type Counts = {
   triage: number;
@@ -270,6 +271,8 @@ export default function DashboardPage() {
                 </div>
               )}
             </section>
+
+            <TestingSummary liveUp={counts.up} liveDown={counts.down} />
 
             <button
               type="button"
