@@ -2,7 +2,7 @@ export default function Navbar() {
   return (
     <nav className="w-full border-b border-gray-200 px-6 py-4 flex items-center justify-between gap-4">
       <span className="font-bold text-lg">SOS Triage</span>
-      <div className="flex flex-wrap justify-end gap-x-6 gap-y-1 text-sm">
+      <div className="flex flex-wrap justify-end gap-x-5 gap-y-1 text-sm">
         <a href="/" className="hover:underline">Home</a>
         <a href="/core" className="hover:underline">Triage</a>
         <a href="/chat" className="hover:underline">Chat</a>
@@ -10,6 +10,8 @@ export default function Navbar() {
         <a href="/product" className="hover:underline">Product</a>
         <a href="/pricing" className="hover:underline">Pricing</a>
         <a href="/marketing" className="hover:underline">Marketing</a>
+        <a href="/dashboard" className="hover:underline">Dashboard</a>
+        <a href="/demo" className="hover:underline">Demo</a>
         <a href="/docs" className="hover:underline">Docs</a>
       </div>
     </nav>
