@@ -16,7 +16,7 @@ export const testers: Tester[] = [
   {
     id: "T1",
     week: 5,
-    who: "Friend or family",
+    who: "Friend",
     device: "Laptop",
     finished: true,
     understood: true,
@@ -38,7 +38,7 @@ export const testers: Tester[] = [
   {
     id: "T3",
     week: 5,
-    who: "Friend or family",
+    who: "Family member",
     device: "Laptop",
     finished: true,
     understood: true,
