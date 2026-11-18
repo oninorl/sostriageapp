@@ -1,6 +1,7 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Walkthrough from "./Walkthrough";
+import AgentMap from "./AgentMap";
 
 export default function DemoPage() {
   return (
@@ -18,6 +19,7 @@ export default function DemoPage() {
         </p>
 
         <Walkthrough />
+        <AgentMap />
       </main>
       <Footer />
     </div>
