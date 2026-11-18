@@ -2,6 +2,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PromptCard from "./PromptCard";
 import ImpactCheck from "./ImpactCheck";
+import Roadmap from "./Roadmap";
 import { prompts } from "./promptLibrary";
 import { logs } from "./buildLogs";
 
@@ -13,9 +14,10 @@ export default function DocsPage() {
         <p className="text-sm text-blue-400 mb-1">DOCS</p>
         <h1 className="text-2xl font-bold mb-2 text-white">Documentation</h1>
         <p className="text-sm text-gray-400 mb-10">
-          Prompts and build logs for SOS Triage. SOS Triage is a student-built prototype that
-          simulates an AI-assisted first medical intake for travelers abroad. It is a demo, not a
-          real medical product, and it is not affiliated with SOS International or any insurer.
+          Prompts, build logs, impact check, and roadmap for SOS Triage. SOS Triage is a
+          student-built prototype that simulates an AI-assisted first medical intake for travelers
+          abroad. It is a demo, not a real medical product, and it is not affiliated with SOS
+          International or any insurer.
         </p>
 
         {/* Prompt library */}
@@ -100,6 +102,9 @@ export default function DocsPage() {
 
         {/* Practical impact check */}
         <ImpactCheck />
+
+        {/* Version 2 roadmap */}
+        <Roadmap />
       </main>
       <Footer />
     </div>
