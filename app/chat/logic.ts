@@ -128,6 +128,17 @@ export function getUrgency(problem: string, duration: Duration, severity: Severi
   return "green";
 }
 
+// Explains which simple rule produced the urgency, in the same order as getUrgency.
+export function getReason(problem: string, duration: Duration, severity: Severity): string {
+  if (severity === "severe") return "You described the problem as severe, and severe problems are always rated high urgency.";
+  if (severity === "moderate") return "You described the problem as moderate, and moderate problems are rated at least moderate urgency.";
+  if (duration === "longer") return "The problem has lasted longer than a few days, so it is rated at least moderate urgency.";
+  const text = normalize(problem);
+  const hit = raiseWords.find((w) => text.includes(w));
+  if (hit) return "Your description contains a word that raises the urgency (for example fever, blood, vomiting, dizziness or confusion), so it is rated moderate urgency.";
+  return "You described the problem as mild and recent, and no warning words were found, so it is rated low urgency.";
+}
+
 // Orange and red results, and emergency or out-of-scope triggers, go to human review.
 export function needsHumanReview(urgency: Urgency | "none", guardrail: GuardrailType) {
   return urgency === "orange" || urgency === "red" || guardrail === "emergency" || guardrail === "out_of_scope";
@@ -156,5 +167,7 @@ export const messages = {
   empty: "I didn't catch that. Could you describe it in a few words?",
   chooseOption: "Please choose one of the options below.",
   simulated: "Simulated suggestion, not medical advice.",
+  reasonTitle: "Why this suggestion",
+  reasonNote: "These are simple rules, not a medical assessment.",
   humanReview: "Flagged for human review: in a real service a doctor would review this case.",
 };

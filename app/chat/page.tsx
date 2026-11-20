@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import { supabase } from "../lib/supabaseClient";
 import {
   checkGuardrail,
+  getReason,
   getUrgency,
   messages as texts,
   needsHumanReview,
@@ -19,7 +20,7 @@ import {
 type NewMessage =
   | { from: "assistant" | "user"; kind: "text"; text: string }
   | { from: "assistant"; kind: "notice" }
-  | { from: "assistant"; kind: "result"; urgency: Urgency; summary: string; flagged: boolean }
+  | { from: "assistant"; kind: "result"; urgency: Urgency; summary: string; reason: string; flagged: boolean }
   | { from: "assistant"; kind: "emergency" };
 
 type Message = NewMessage & { id: number };
@@ -230,10 +231,11 @@ export default function ChatPage() {
     if (!duration) return;
     const urgency = getUrgency(problem, duration.value, option.value);
     const flagged = needsHumanReview(urgency, guardrailSeen);
+    const reason = getReason(problem, duration.value, option.value);
     const summary = `Main problem: "${problem}". Duration: ${duration.label.toLowerCase()}. Severity: ${option.label.toLowerCase()}.`;
     push([
       { from: "user", kind: "text", text: option.label },
-      { from: "assistant", kind: "result", urgency, summary, flagged },
+      { from: "assistant", kind: "result", urgency, summary, reason, flagged },
     ]);
     setStep("done");
     void saveSession({
@@ -342,6 +344,11 @@ export default function ChatPage() {
                       </p>
                       <p className="text-gray-200 mb-3">{m.summary}</p>
                       <p className="text-gray-200 mb-3">{nextSteps[m.urgency]}</p>
+                      <div className="mb-3 border border-gray-700 rounded px-2 py-2 bg-gray-900/60">
+                        <p className="text-xs font-semibold text-gray-100 mb-1">{texts.reasonTitle}</p>
+                        <p className="text-xs text-gray-300">{m.reason}</p>
+                        <p className="text-xs text-gray-400 mt-1">{texts.reasonNote}</p>
+                      </div>
                       <p className="text-xs text-gray-300 bg-gray-900/60 border border-gray-700 rounded px-2 py-1">
                         {texts.simulated}
                       </p>
