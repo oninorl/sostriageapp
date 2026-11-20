@@ -53,6 +53,10 @@ export const later: RoadmapItem[] = [
     addresses: "Simulated checkpoint",
   },
   {
+    text: "Cover more kinds of problems, as requested by testers, only with rules reviewed by a clinician.",
+    addresses: "Missed emergency, wrong urgency",
+  },
+  {
     text: "Spanish and other languages, starting with the countries where the first users are.",
     addresses: "Usability evidence",
   },
