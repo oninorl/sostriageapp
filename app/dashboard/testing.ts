@@ -65,8 +65,7 @@ export const testers: Tester[] = [
     finished: true,
     understood: true,
     rating: "down",
-    issueFound:
-      'Comment: "I don\'t want a doctor, I want solutions". Also found the name "Agent Map" unclear',
+    issueFound: 'Comment: "I don\'t want a doctor, I want solutions"',
     fix: "No code change: the assistant deliberately gives no diagnosis or treatment advice",
   },
   {
