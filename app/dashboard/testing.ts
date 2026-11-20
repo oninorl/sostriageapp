@@ -106,7 +106,7 @@ export const testers: Tester[] = [
 
 // Update this after the full-site regression test. status: "not_run", "passed", or "failed".
 export const regression = {
-  status: "not_run" as "not_run" | "passed" | "failed",
-  passed: 0,
+  status: "passed" as "not_run" | "passed" | "failed",
+  passed: 11,
   total: 11,
 };
